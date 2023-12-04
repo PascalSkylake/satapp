@@ -10,6 +10,12 @@ use std::{
     str::FromStr,
 };
 use ureq::serde_json::{self};
+use lazy_static::lazy_static;
+
+
+lazy_static! {
+    pub static ref elements_static: Vec<Elements> = load_all_elements();
+}
 
 pub fn get_satellites() -> anyhow::Result<()> {
     let mut path = env::current_exe().expect("error finding path to executable"); //finds path of executable

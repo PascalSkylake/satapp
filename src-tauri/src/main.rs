@@ -9,6 +9,7 @@ mod commands;
 mod rigctl;
 mod tle;
 mod tracking;
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
@@ -43,4 +44,6 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    
 }
