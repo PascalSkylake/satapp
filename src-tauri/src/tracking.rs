@@ -286,9 +286,10 @@ fn lat_lon_to_x_y(g: &GroundPos) -> RectangularPoint {
 
 #[tauri::command(async)]
 pub fn get_all_sat_x_y() -> Result<Vec<Vec<i32>>, String> {
-    let elements_vec = tle::load_all_elements();
+    //let elements_vec = tle::load_all_elements();
+    let elements_vec = &tle::elements_static;
     let mut positions: Vec<Vec<i32>> = vec![];
-    for elements in &elements_vec {
+    for elements in elements_vec.iter() {
                 
         let ground_pos = get_sat_lat_lon(Epoch::now().unwrap(), elements);
         if ground_pos.is_some() {
@@ -302,9 +303,10 @@ pub fn get_all_sat_x_y() -> Result<Vec<Vec<i32>>, String> {
 
 #[tauri::command(async)]
 pub fn get_all_r() -> Result<Vec<Vec<i32>>, String> {
-    let elements_vec = tle::load_all_elements();
+    //let elements_vec = tle::load_all_elements();
+    let elements_vec = &tle::elements_static;
     let mut positions: Vec<Vec<i32>> = vec![];
-    for elements in &elements_vec {
+    for elements in elements_vec.iter() {
                 
         let pred_option = get_prediction(Epoch::now().unwrap(), elements);
         if pred_option.is_some() {
