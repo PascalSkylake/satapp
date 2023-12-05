@@ -18,22 +18,22 @@
 /* Change background color of buttons on hover */
 .tab a:hover {
   background-color: #2a2b32;
-  border-top-left-radius: 25px;
-  border-bottom-left-radius: 25px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
 /* Create an active/current tablink class */
 .tab a.active {
   background-color: #343541;
-  border-top-left-radius: 25px;
-  border-bottom-left-radius: 25px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
 /* Style the tab content */
 .tabcontent {
   padding: 6px 12px;
   background-color: 525467;
-  border-radius: 10px;
+  border-radius: 5px;
   margin-left: 80px
 } 
 
@@ -65,7 +65,7 @@
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: 10px;
+  border-radius: 5px;
   background-color: #2a2b32;
   color: #fff;
   margin-top: 10px;
@@ -93,7 +93,7 @@
   margin-top: 10px;
   margin-bottom: 10px;
   border: none;
-  border-radius: 10px;
+  border-radius: 5px;
   cursor: pointer;
   transition: 0.3s;
 }
@@ -122,24 +122,24 @@
 .list-item {
   padding: 14px 16px;
   transition: 0.3s;
-  border-radius: 25px;
+  border-radius: 5px;
   margin-top: 2px;
   margin-bottom: 2px;
 }
 
 #globeCanvas {
-  border-radius: 20px;
+  border-radius: 5px;
 }
 
 #map-canvas {
-  border-radius: 20px;
+  border-radius: 5px;
 }
 
 #findSat {
   position: absolute;
   left: 110px;
   top: 25px;
-  border-radius: 20px;
+  border-radius: 5px;
   padding: 10px;
   pointer-events: all;
   width: 145px;
@@ -149,7 +149,7 @@
   position: absolute;
   left: 280px;
   top: 25px;
-  border-radius: 20px;
+  border-radius: 5px;
   padding: 10px;
   pointer-events: all;
   width: 40px;

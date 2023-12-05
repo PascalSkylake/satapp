@@ -177,9 +177,8 @@ pub async fn listen(id: &str, freq: &str) -> Result<String, String> {
             match freq.parse::<u32>() {
                 Ok(freqnum) => {
                     loop {
-                        println!("{}", freqnum + (tracking::calc_doppler_shift(6369555, commands::get_lat(), commands::get_lon(), freqnum as f32, &elements)) as u32);
-                        rigctl::set_frequency(freqnum + (tracking::calc_doppler_shift(6369555, commands::get_lat(), commands::get_lon(), freqnum as f32, &elements)) as u32);
-                        //thread::sleep(time::Duration::from_millis(50));
+                        let new_frequency: u32 = (freqnum as f64 + (tracking::calc_doppler_shift(6369555, commands::get_lat(), commands::get_lon(), freqnum as f64, &elements))) as u32;
+                        rigctl::set_frequency(new_frequency);
                     }
                 }
                 Err(error) => return Err("epic fail, input was not a valid number".into())
@@ -370,15 +369,15 @@ pub fn read_settings() -> Vec<String> {
 }
 
 #[tauri::command]
-pub fn get_lat() -> f32{
+pub fn get_lat() -> f64{
     let lat = read_settings().get(0).unwrap().parse().unwrap();
-    print!("\nsuccessfully read value {}", lat);
+    //print!("\nsuccessfully read value {}", lat);
     return lat;
 }
 
 #[tauri::command]
-pub fn get_lon() -> f32{
+pub fn get_lon() -> f64{
     let lon = read_settings().get(1).unwrap().parse().unwrap();
-    print!("\nsuccessfully read value {}", lon);
+    //print!("\nsuccessfully read value {}", lon);
     return lon;
 }

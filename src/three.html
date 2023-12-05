@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8" />
   <link rel="stylesheet" type="text/css" href="styles.css">
@@ -14,6 +15,7 @@
     }
   </script>
 </head>
+
 <body style="background-color: #343541;">
   <!-- Tab links -->
   <div style="background-color: #202123" class="tab">
@@ -25,18 +27,47 @@
       <li><a class="tablinks" href="settings.html"><img src="assets/gear.png" alt="world"></a></li>
     </ul>
   </div>
-  
+
   <!-- Tab content container -->
   <div id="globe" class="tabcontent">
     <script type="module" src="threed.js"></script>
-    <div id ="findSat" style="background-color: #343541;">
-      <form id = "threed-form" action = "">
+    <div id="findSat" style="background-color: #343541;">
+      <form id="threed-form" action="">
         <input class="input-field" id="threed-input" placeholder="Enter a NORAD ID..." />
         <button class="custom-button" type="submit">Find satellite</button>
       </form>
     </div>
   </div>
-  
-</body>
-</html>
 
+
+  <div id="globe"class="satellite-info">
+    <div class="thing">
+      <label for="name">Name:</label>
+      <p id="name"></p>
+    </div>
+    <div class="thing">
+      <label for="lat">Latitude:</label>
+      <p id="lat"></p>
+    </div>
+    <div class="thing">
+      <label for="lon">Longitude:</label>
+      <p id="lon"></p>
+    </div>
+    <div class="thing">
+      <label for="alt">Altitude:</label>
+      <p id="alt"></p>
+    </div>
+    <div class="thing">
+      <label for="year">Launch Year:</label>
+      <p id="year"></p>
+    </div>
+    <div class="thing">
+      <label for="next">Next Pass (GMT):</label>
+      <p id="next"></p>
+    </div>
+  </div>
+
+
+</body>
+
+</html>

@@ -88,6 +88,7 @@ function animate() {
 
     centerObject.position.copy(controls.target);
 
+
     for (let i = 0; i < satCoords.length; i++) {
         sats[i].position.x = satCoords[i][1];
         sats[i].position.y = satCoords[i][2]; //for sure positive
@@ -107,6 +108,7 @@ function animate() {
             sats[i].geometry = defaultGeo;
         }
     }
+
     invoke("calc_gmst_now").then((message) => {
         earth.rotation.y = (message / 86400.0 * 2 * Math.PI) - Math.PI / 2;
     })

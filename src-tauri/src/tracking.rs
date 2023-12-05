@@ -1,30 +1,30 @@
-use std::{f32::consts::PI, str::FromStr, ops::Add};
+use std::{f64::consts::PI, str::FromStr, ops::Add};
 use hifitime::prelude::*;
 use sgp4::{Elements, Prediction};
 
 use crate::tle::{self, get_elements_from_json};
 
-const C: f32 = 299792458.0;
+const C: f64 = 299792458.0;
 
 
 //takes in a point in rectangular coordinates, returns spherical coordinates
 fn rect_to_spherical(r: &RectangularPoint) -> SphericalPoint{
-    let rho = f32::sqrt(r.x.powi(2) + r.y.powi(2) + r.z.powi(2));
-    let theta = f32::atan2(r.y, r.x);
-    let phi = f32::atan2(f32::sqrt(r.x.powf(2.0) + r.y.powf(2.0)), r.z);
+    let rho = f64::sqrt(r.x.powi(2) + r.y.powi(2) + r.z.powi(2));
+    let theta = f64::atan2(r.y, r.x);
+    let phi = f64::atan2(f64::sqrt(r.x.powf(2.0) + r.y.powf(2.0)), r.z);
     return SphericalPoint { rho: rho, theta: theta, phi: phi}
 }
 
 fn spherical_to_rect(s: &SphericalPoint) -> RectangularPoint{
-    let x = s.rho * f32::sin(s.phi) * f32::cos(s.theta);
-    let y = s.rho * f32::sin(s.phi) * f32::sin(s.theta);
-    let z = s.rho * f32::cos(s.phi);
+    let x = s.rho * f64::sin(s.phi) * f64::cos(s.theta);
+    let y = s.rho * f64::sin(s.phi) * f64::sin(s.theta);
+    let z = s.rho * f64::cos(s.phi);
     return RectangularPoint { x: x, y: y, z: z}
 }
 
 fn spherical_to_lat_lon(s: &SphericalPoint, time: Epoch) -> GroundPos {
     let lat = ((s.phi * 180.0 / PI) - 90.0) * -1.0;
-    let sidereal_time = calc_gmst(time) as f32 / 86400.0 * 360.0;
+    let sidereal_time = calc_gmst(time) as f64 / 86400.0 * 360.0;
     let mut lon = ((s.theta * 180.0 / PI) - sidereal_time) % 360.0;
     if lon < -180.0 {
         lon += 360.0;
@@ -77,9 +77,9 @@ pub fn get_sat_lat_lon(time: Epoch, elements: &Elements) -> Option<GroundPos> {
     let pred_option = get_prediction(time, elements);
     if pred_option.is_some() {
         let pred = pred_option.unwrap();
-        let x = pred.position.get(0).unwrap().clone() as f32;
-        let y = pred.position.get(1).unwrap().clone() as f32;
-        let z = pred.position.get(2).unwrap().clone() as f32;
+        let x = pred.position.get(0).unwrap().clone() as f64;
+        let y = pred.position.get(1).unwrap().clone() as f64;
+        let z = pred.position.get(2).unwrap().clone() as f64;
         let rect = RectangularPoint{x: x, y: y, z: z};
         let spher = rect_to_spherical(&rect);
         let g = spherical_to_lat_lon(&spher, time);
@@ -92,7 +92,7 @@ pub fn get_sat_lat_lon(time: Epoch, elements: &Elements) -> Option<GroundPos> {
 }
 
 #[tauri::command]
-pub fn get_sat_lat(id: String) -> Result<f32, String>{
+pub fn get_sat_lat(id: String) -> Result<f64, String>{
     match id.parse::<u32>() {
         Ok(idnum) => {
             let elements = get_elements_from_json(idnum).unwrap();
@@ -103,7 +103,7 @@ pub fn get_sat_lat(id: String) -> Result<f32, String>{
 }
 
 #[tauri::command]
-pub fn get_sat_lon(id: String) -> Result<f32, String>{
+pub fn get_sat_lon(id: String) -> Result<f64, String>{
     match id.parse::<u32>() {
         Ok(idnum) => {
             let elements = get_elements_from_json(idnum).unwrap();
@@ -115,23 +115,23 @@ pub fn get_sat_lon(id: String) -> Result<f32, String>{
 
 
 
-fn get_user_position(earth_rad: i32, lat: f32, lon: f32, epoch: Epoch) -> RectangularPoint{
-    let user_ra = (calc_gmst(epoch) as f32) / 86400.0 * 360.0 + lon;
-    let user_position = SphericalPoint{rho: earth_rad as f32, phi: (90.0 - lat) * PI / 180.0, theta: user_ra * PI / 180.0};
+fn get_user_position(earth_rad: i32, lat: f64, lon: f64, epoch: Epoch) -> RectangularPoint{
+    let user_ra = (calc_gmst(epoch) as f64) / 86400.0 * 360.0 + lon;
+    let user_position = SphericalPoint{rho: earth_rad as f64, phi: (90.0 - lat) * PI / 180.0, theta: user_ra * PI / 180.0};
     let user_rect = spherical_to_rect(&user_position);
     return user_rect
 }
 
-pub fn get_elavation(earth_rad: i32, lat: f32, lon: f32, elements: &Elements, epoch: Epoch) -> Option<f32>{
+pub fn get_elavation(earth_rad: i32, lat: f64, lon: f64, elements: &Elements, epoch: Epoch) -> Option<f64>{
     let pred_option = get_prediction(epoch, elements);
     if pred_option.is_some() {
         let pred = pred_option.unwrap();
         let user_position = get_user_position(earth_rad, lat, lon, epoch);
-        let user_to_sat_vec = RectangularPoint{x: pred.position.get(0).unwrap().clone() as f32 * 1000.0 - user_position.x, y: pred.position.get(1).unwrap().clone() as f32 * 1000.0 - user_position.y, z: pred.position.get(2).unwrap().clone() as f32 * 1000.0 - user_position.z};
+        let user_to_sat_vec = RectangularPoint{x: pred.position.get(0).unwrap().clone() as f64 * 1000.0 - user_position.x, y: pred.position.get(1).unwrap().clone() as f64 * 1000.0 - user_position.y, z: pred.position.get(2).unwrap().clone() as f64 * 1000.0 - user_position.z};
         let user_mag = point_mag(&user_position);
-        let user_to_sat_mag = f32::sqrt(user_to_sat_vec.x.powi(2) + user_to_sat_vec.y.powi(2) + user_to_sat_vec.z.powi(2));
+        let user_to_sat_mag = f64::sqrt(user_to_sat_vec.x.powi(2) + user_to_sat_vec.y.powi(2) + user_to_sat_vec.z.powi(2));
         let user_dot_sat = user_position.x * user_to_sat_vec.x + user_position.y * user_to_sat_vec.y + user_position.z * user_to_sat_vec.z;
-        let elevation = f32::acos(user_dot_sat / (user_mag * user_to_sat_mag));
+        let elevation = f64::acos(user_dot_sat / (user_mag * user_to_sat_mag));
         //println!("user ({}, {}, {}), user to sat ({}, {}, {})", user_position.x, user_position.y, user_position.z, user_to_sat_vec.x, user_to_sat_vec.y, user_to_sat_vec.z);
         return Some((PI/2.0 - elevation) * 180.0 / PI);
     } else {
@@ -140,16 +140,16 @@ pub fn get_elavation(earth_rad: i32, lat: f32, lon: f32, elements: &Elements, ep
     
 }
 
-fn get_azimuth(lat: f32, lon: f32, epoch: Epoch, elements: &Elements) -> Option<f32>{
+fn get_azimuth(lat: f64, lon: f64, epoch: Epoch, elements: &Elements) -> Option<f64>{
     //to find the azimuth i will find the angle of intersection of two planes. The first plane will be the plane y=tan(theta)x, which is the plane that contains the user and the meridian they are in
     //the second plane will contain the user, the center of the earth, and the satellite
 
     let pred_option = get_prediction(epoch, elements);
     if pred_option.is_some() {
         let pred = pred_option.unwrap();
-        let x = pred.position.get(0).unwrap().clone() as f32;
-        let y = pred.position.get(1).unwrap().clone() as f32;
-        let z = pred.position.get(2).unwrap().clone() as f32;
+        let x = pred.position.get(0).unwrap().clone() as f64;
+        let y = pred.position.get(1).unwrap().clone() as f64;
+        let z = pred.position.get(2).unwrap().clone() as f64;
         let pred_rect = RectangularPoint {x:x, y:y, z:z};
 
         let up = RectangularPoint {x: 0.0, y: 0.0, z: 1.0};
@@ -158,7 +158,7 @@ fn get_azimuth(lat: f32, lon: f32, epoch: Epoch, elements: &Elements) -> Option<
         let n2 = norm(&cross_product(&user, &pred_rect)); //normal vector of plane formed by center of earth, user, and sat
 
         let cos = n1.x * n2.x + n1.y * n2.y + n1.z * n2.z; //n1 dot n2
-        let ang = f32::acos(cos) * 180.0 / PI;
+        let ang = f64::acos(cos) * 180.0 / PI;
 
         //find out whether the satellite is to the east or the west, since the angle between planes will always be between 0 and 180 deg.
         let g_option = get_sat_lat_lon(epoch, elements);
@@ -181,16 +181,16 @@ fn get_azimuth(lat: f32, lon: f32, epoch: Epoch, elements: &Elements) -> Option<
 }
 
 #[tauri::command]
-pub fn get_alt(id: String) -> Result<f32, String>{
+pub fn get_alt(id: String) -> Result<f64, String>{
     match id.parse::<u32>() {
         Ok(idnum) => {
             let elements = get_elements_from_json(idnum).unwrap();
             let pred_option = get_prediction(Epoch::now().unwrap(), &elements);
             if pred_option.is_some() {
                 let pred = pred_option.unwrap();
-                let x = pred.position.get(0).unwrap().clone() as f32;
-                let y = pred.position.get(1).unwrap().clone() as f32;
-                let z = pred.position.get(2).unwrap().clone() as f32;
+                let x = pred.position.get(0).unwrap().clone() as f64;
+                let y = pred.position.get(1).unwrap().clone() as f64;
+                let z = pred.position.get(2).unwrap().clone() as f64;
                 let pred_rect = RectangularPoint {x:x, y:y, z:z};
                 return Ok(point_mag(&pred_rect) - 6369.555);
             }
@@ -204,28 +204,28 @@ pub fn get_alt(id: String) -> Result<f32, String>{
 }
 
 
-fn calc_reciever_velocity(earth_rad: i32, lat: f32, lon: f32) -> RectangularPoint{
+fn calc_reciever_velocity(earth_rad: i32, lat: f64, lon: f64) -> RectangularPoint{
     let user = get_user_position(earth_rad, lat, lon, Epoch::now().unwrap());
-    let r = f32::cos(lat * PI / 180.0) / earth_rad as f32; //find the radius of the circle that the user is revolving in (2d projection of path that they are travelling in);
+    let r = f64::cos(lat * PI / 180.0) / earth_rad as f64; //find the radius of the circle that the user is revolving in (2d projection of path that they are travelling in);
     let user_dir = norm(&RectangularPoint { x: -user.y, y: user.x, z: 0.0 }); //unit vector in the direction of the velocity
     let user_speed = (2.0 * PI * r) / 86164.0; //circumference of the circle divided by rotational period of earth
     let user_vel = RectangularPoint {x: user_dir.x * user_speed, y: user_dir.y * user_speed, z: 0.0};
     return user_vel;
 }
 
-pub fn calc_doppler_shift(earth_rad: i32, lat: f32, lon: f32, frequency: f32, elements: &Elements) -> f32{
-    // let wavelength: f32 = frequency / C;
+pub fn calc_doppler_shift(earth_rad: i32, lat: f64, lon: f64, frequency: f64, elements: &Elements) -> f64{
+    // let wavelength: f64 = frequency / C;
     let pred_option = get_prediction(Epoch::now().unwrap(), elements);
     if pred_option.is_some() {
         let pred = pred_option.unwrap();
-        let x = pred.position.get(0).unwrap().clone() as f32;
-        let y = pred.position.get(1).unwrap().clone() as f32;
-        let z = pred.position.get(2).unwrap().clone() as f32;
+        let x = pred.position.get(0).unwrap().clone() as f64;
+        let y = pred.position.get(1).unwrap().clone() as f64;
+        let z = pred.position.get(2).unwrap().clone() as f64;
         let pred_rect = RectangularPoint {x:x, y:y, z:z};
 
-        let vx = pred.velocity.get(0).unwrap().clone() as f32 * 1000.0;
-        let vy = pred.velocity.get(1).unwrap().clone() as f32 * 1000.0;
-        let vz = pred.velocity.get(2).unwrap().clone() as f32 * 1000.0;
+        let vx = pred.velocity.get(0).unwrap().clone() as f64 * 1000.0;
+        let vy = pred.velocity.get(1).unwrap().clone() as f64 * 1000.0;
+        let vz = pred.velocity.get(2).unwrap().clone() as f64 * 1000.0;
         let pred_vel_rect = RectangularPoint {x:vx, y:vy, z:vz};
 
         let user = get_user_position(earth_rad, lat, lon, Epoch::now().unwrap());
@@ -235,7 +235,7 @@ pub fn calc_doppler_shift(earth_rad: i32, lat: f32, lon: f32, frequency: f32, el
         let user_vel = calc_reciever_velocity(earth_rad, lat, lon);
         let relative_vel = RectangularPoint{x: pred_vel_rect.x - user_vel.x, y: pred_vel_rect.y - user_vel.y, z: pred_vel_rect.z - user_vel.z};
 
-    let cos = dot_product(&relative_vel, &sat_to_user) / (point_mag(&relative_vel) * point_mag(&sat_to_user));
+        let cos = dot_product(&relative_vel, &sat_to_user) / (point_mag(&relative_vel) * point_mag(&sat_to_user));
 
         let new_freq = C / (C - point_mag(&relative_vel) * cos) * frequency;
         return new_freq - frequency;
@@ -245,8 +245,8 @@ pub fn calc_doppler_shift(earth_rad: i32, lat: f32, lon: f32, frequency: f32, el
     
 }
 
-fn point_mag(rec: &RectangularPoint) -> f32 {
-    return f32::sqrt(rec.x.powi(2) + rec.y.powi(2) + rec.z.powi(2));
+fn point_mag(rec: &RectangularPoint) -> f64 {
+    return f64::sqrt(rec.x.powi(2) + rec.y.powi(2) + rec.z.powi(2));
 }
 
 fn cross_product(a: &RectangularPoint, b: &RectangularPoint) -> RectangularPoint{
@@ -258,7 +258,7 @@ fn norm(rec: &RectangularPoint) -> RectangularPoint{
     return RectangularPoint { x: rec.x / mag, y: rec.y / mag, z: rec.z / mag}
 }
 
-fn dot_product(a: &RectangularPoint, b: &RectangularPoint) -> f32{
+fn dot_product(a: &RectangularPoint, b: &RectangularPoint) -> f64{
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
@@ -279,8 +279,8 @@ fn lat_lon_to_x_y(g: &GroundPos) -> RectangularPoint {
     let width = 21600.0;
     let height = 10800.0;
     
-    let x: f32 = ((g.lon + 180.0) * (width  / 360.0));
-    let y: f32 = (((g.lat * -1.0) + 90.0) * (height / 180.0));
+    let x: f64 = ((g.lon + 180.0) * (width  / 360.0));
+    let y: f64 = (((g.lat * -1.0) + 90.0) * (height / 180.0));
     return RectangularPoint { x: x, y: y, z: 0.0 };
 }
 
@@ -335,7 +335,7 @@ pub fn get_orbit_path(id: String) -> Result<Vec<Vec<i32>>, String> {
             let orbits_per_day = elements.mean_motion;
             let seconds_per_orbit = (86400. / orbits_per_day) as u64;
 
-            for i in 0..seconds_per_orbit {
+            for i in (0..seconds_per_orbit).step_by(60) {
                 let pred_option = get_prediction(this_time.add(i as f64), &elements);
                 if pred_option.is_some() {
                     let pred = pred_option.unwrap();
@@ -377,19 +377,19 @@ pub fn get_launch_date(id: String) -> Result<String, String> {
 
 
 struct SphericalPoint {
-    rho: f32,
-    theta: f32,
-    phi: f32
+    rho: f64,
+    theta: f64,
+    phi: f64
 }
 
 pub struct RectangularPoint {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32
+    pub x: f64,
+    pub y: f64,
+    pub z: f64
 }
 
 pub struct GroundPos {
-    pub lat: f32,
-    pub lon: f32
+    pub lat: f64,
+    pub lon: f64
 }
 
