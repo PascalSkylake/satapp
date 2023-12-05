@@ -14,7 +14,7 @@ use lazy_static::lazy_static;
 
 
 lazy_static! {
-    pub static ref elements_static: Vec<Elements> = load_all_elements();
+    pub static ref ELEMENTS_STATIC: Vec<Elements> = load_all_elements();
 }
 
 pub fn get_satellites() -> anyhow::Result<()> {

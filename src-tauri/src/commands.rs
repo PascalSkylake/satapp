@@ -55,6 +55,67 @@ pub async fn next(id: &str) -> Result<Vec<String>, String>{
                 Ok(result) => elements = result
             }
             let mut passes = vec![];
+            let mut first_pass: Option<Epoch> = None;
+            let mut num_mins: u32 = 0;
+            for i in 0..10080 {
+                let epoch = now + Duration::from_seconds(i as f64 * 60.0);
+                match crate::tracking::get_elavation(6369555, lat, lon, &elements, epoch) {
+                    Some(ele) => if ele > 0.0 {
+                        num_mins += 1;
+                        if first_pass.is_none() {
+                            first_pass = Some(epoch);
+                        }
+                        
+                        
+                    }
+                    _ => return Err("failed to find elevation of satellite".to_owned())
+                        
+                }
+            }
+            match first_pass {
+                Some(epoch) => {
+                    if num_mins > 8000 {
+                        return Err("satellite is likely geostationary, a pass cannot be found".to_owned());
+                    } else {
+                        //find the first and last second of the pass
+                        let mut first_sec = epoch.clone();
+                        let mut last_sec = epoch.clone();
+                        while crate::tracking::get_elavation(6369555, lat, lon, &elements, first_sec).unwrap() > 0.0 {
+                            first_sec = first_sec - Duration::from_seconds(1.0);
+                        }
+                        while crate::tracking::get_elavation(6369555, lat, lon, &elements, last_sec).unwrap() > 0.0 {
+                            last_sec = last_sec + Duration::from_seconds(1.0);
+                        }
+                        now = last_sec + Duration::from_seconds(10.0);
+                        let fmt_first = Formatter::new(first_sec, RFC2822);
+                        let fmt_last = Formatter::new(last_sec, RFC2822);
+                        passes.push(format!("{fmt_first} to {fmt_last}"));
+                    }
+                }
+                None => return Err("no pass was found within the next week".to_owned())
+            }
+            return Ok(passes);
+            
+        }
+        Err(error) => return Err("epic fail, input was not a valid number".to_owned())
+    }
+}
+
+#[tauri::command]
+pub async fn next_ten(id: &str) -> Result<Vec<String>, String>{
+    match id.parse::<u32>() {
+        Ok(idnum) => {
+            //this first part scans with minute resolution to find when the satellite is above the horizon
+            let mut now = Epoch::now().unwrap();
+            let elements_result = get_elements_from_json(idnum);
+            let elements;
+            let lat = commands::get_lat();
+            let lon = commands::get_lon();
+            match elements_result {
+                Err(err) => return Err(err),
+                Ok(result) => elements = result
+            }
+            let mut passes = vec![];
             for j in 0..10 {
                 let mut first_pass: Option<Epoch> = None;
                 let mut num_mins: u32 = 0;

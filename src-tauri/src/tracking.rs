@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, str::FromStr};
+use std::{f32::consts::PI, str::FromStr, ops::Add};
 use hifitime::prelude::*;
 use sgp4::{Elements, Prediction};
 
@@ -287,7 +287,7 @@ fn lat_lon_to_x_y(g: &GroundPos) -> RectangularPoint {
 #[tauri::command(async)]
 pub fn get_all_sat_x_y() -> Result<Vec<Vec<i32>>, String> {
     //let elements_vec = tle::load_all_elements();
-    let elements_vec = &tle::elements_static;
+    let elements_vec = &tle::ELEMENTS_STATIC;
     let mut positions: Vec<Vec<i32>> = vec![];
     for elements in elements_vec.iter() {
                 
@@ -304,7 +304,7 @@ pub fn get_all_sat_x_y() -> Result<Vec<Vec<i32>>, String> {
 #[tauri::command(async)]
 pub fn get_all_r() -> Result<Vec<Vec<i32>>, String> {
     //let elements_vec = tle::load_all_elements();
-    let elements_vec = &tle::elements_static;
+    let elements_vec = &tle::ELEMENTS_STATIC;
     let mut positions: Vec<Vec<i32>> = vec![];
     for elements in elements_vec.iter() {
                 
@@ -318,8 +318,37 @@ pub fn get_all_r() -> Result<Vec<Vec<i32>>, String> {
         }
     
     }
-    println!("{:?}", positions[1]);
+    //println!("{:?}", positions[1]);
     return Ok(positions);
+}
+
+#[tauri::command(async)]
+pub fn get_orbit_path(id: String) -> Result<Vec<Vec<i32>>, String> {
+    match id.parse::<u32>() {
+        Ok(idnum) => {
+            let mut positions: Vec<Vec<i32>> = vec![];
+
+            let this_time = Epoch::now().unwrap();
+
+
+            let elements = get_elements_from_json(idnum).unwrap();
+            let orbits_per_day = elements.mean_motion;
+            let seconds_per_orbit = (86400. / orbits_per_day) as u64;
+
+            for i in 0..seconds_per_orbit {
+                let pred_option = get_prediction(this_time.add(i as f64), &elements);
+                if pred_option.is_some() {
+                    let pred = pred_option.unwrap();
+                    let x = pred.position.get(0).unwrap().clone() as i32;
+                    let y = pred.position.get(1).unwrap().clone() as i32;
+                    let z = pred.position.get(2).unwrap().clone() as i32;
+                    positions.push(vec![x, y, z, elements.norad_id as i32]);
+                }
+            }
+            return Ok(positions);
+        }
+        Err(_) => return Err("failed to parse int".into())
+    } 
 }
 
 #[tauri::command]

@@ -31,6 +31,7 @@ fn main() {
             next,
             get_all_sat_x_y,
             get_all_r,
+            get_orbit_path,
             calc_gmst_now,
             read_settings,
             write_settings,
